@@ -1,75 +1,88 @@
 import { useState } from "react";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
+import "./App.css";
 
 export default function TodoList() {
-    let [todos, setTodos]=useState([{task: "sample", id: uuidv4(), isDone: false}]);
-    let [newTodo, setNewTodo]=useState("");
+  const [todos, setTodos] = useState([{ task: "sample", id: uuidv4(), isDone: false }]);
+  const [newTodo, setNewTodo] = useState("");
+  const [deletingTodoId, setDeletingTodoId] = useState(null);
+  const [showTrash, setShowTrash] = useState(false);
 
-    let addNewTask=()=>{
-        setTodos((prevTodos)=>{
-            return [...prevTodos, {task : newTodo, id: uuidv4(), isDone: false}];
-        });
-        setNewTodo("");
-    };
+  const addNewTask = () => {
+    if (newTodo.trim() === "") return;
+    setTodos((prevTodos) => [
+      ...prevTodos,
+      { task: newTodo, id: uuidv4(), isDone: false }
+    ]);
+    setNewTodo("");
+  };
 
-    let updateTodoValue=(event) => {
-        setNewTodo(event.target.value);
-    }
+  const updateTodoValue = (event) => {
+    setNewTodo(event.target.value);
+  };
 
-    let deleteTodo=(id)=>{
-        setTodos((prevTodos)=>todos.filter((prevTodos)=>prevTodos.id!=id));
-    }
+  const deleteTodo = (id) => {
+    setDeletingTodoId(id);
+    setShowTrash(true);
+    // Wait for the animation to finish (1s), then remove todo and hide trash bin
+    setTimeout(() => {
+      setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+      setDeletingTodoId(null);
+      setShowTrash(false);
+    }, 1000);
+  };
 
-    let doneAll = () =>{
-        setTodos( (prevTodos) =>(
-            prevTodos.map((todo)=>{
-                return {
-                    ...todo,
-                    isDone: true,
-                };
-            })
-        ));
-    }
+  const doneAll = () => {
+    setTodos((prevTodos) =>
+      prevTodos.map((todo) => ({ ...todo, isDone: true }))
+    );
+  };
 
-    let doneOne= (id) =>{
-        setTodos( (prevTodos) =>(
-            prevTodos.map((todo)=>{
-                if(todo.id===id)
-                {return {
-                    ...todo,
-                    isDone: true,
-                }}
-                else
-                    return todo;
-            })
-        ));
-    }
+  const doneOne = (id) => {
+    setTodos((prevTodos) =>
+      prevTodos.map((todo) => (todo.id === id ? { ...todo, isDone: true } : todo))
+    );
+  };
 
-    return (
-        <div>
-            <input placeholder="Add a task" value={newTodo} onChange={updateTodoValue}></input>
-            <br></br>
-            <br></br>
-            <button onClick={addNewTask}>Add Task</button>
-            <br></br>
-            <br></br>
-            <br></br>
-            <hr></hr>
-            <h4>Tasks To Do</h4>
-            <ul>
-                { todos.map((todo)=>(
-                        <li key={todo.id}>
-                            <span style={{ textDecoration: todo.isDone ? 'line-through' : 'none' }}>{todo.task}</span>
-                            &nbsp;&nbsp;&nbsp;
-                            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
-                            &nbsp;&nbsp;&nbsp;\
-                            <button onClick={() => doneOne(todo.id)}>Mark As Done</button>
-                        </li>
-                ))
-                }
-            </ul>
-            <br></br>
-            <button onClick={doneAll}>Mark All As Done</button>
-        </div>
-    )
+  return (
+    <div className="todo-container">
+      <h1 className="title">📝 Stylish To-Do List</h1>
+      <div className="input-group">
+        <input
+          className="todo-input"
+          placeholder="Add a new task..."
+          value={newTodo}
+          onChange={updateTodoValue}
+        />
+        <button className="add-btn" onClick={addNewTask}>
+          ➕ Add
+        </button>
+      </div>
+      <ul className="todo-list">
+        {todos.map((todo) => (
+          <li
+            key={todo.id}
+            id={todo.id}
+            className={`todo-item ${todo.isDone ? "done" : ""} ${
+              deletingTodoId === todo.id ? "move-to-trash" : ""
+            }`}
+          >
+            <span>{todo.task}</span>
+            <div className="buttons">
+              <button className="done-btn" onClick={() => doneOne(todo.id)}>
+                ✅ Done
+              </button>
+              <button className="delete-btn" onClick={() => deleteTodo(todo.id)}>
+                ❌ Delete
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <button className="done-all-btn" onClick={doneAll}>
+        ✅ Mark All As Done
+      </button>
+      {showTrash && <div className="trash-bin">🗑️</div>}
+    </div>
+  );
 }
